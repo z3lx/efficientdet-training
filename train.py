@@ -35,7 +35,7 @@ spec = model_spec.get(
 train_data = object_detector.DataLoader.from_pascal_voc(
     annotations_dir = dataset_annotation_dir,
     images_dir = dataset_image_dir,
-    label_map = ["note"]
+    label_map = ["0"]
 )
 
 # Train model
