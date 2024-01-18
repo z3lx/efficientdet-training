@@ -1,37 +1,66 @@
 import os
-from PIL import Image
-
 import cv2
 import tensorflow as tf
+from utils import create_subdirectory
+from utils import chdir_to_project_root
+from utils import run_odt_and_draw_results
 
-from utils import create_subdirectory, chdir_to_project_root, run_odt_and_draw_results
-
-MODEL_PATH = "exports/export_0/model.tflite"
-INPUT_IMG_PATH = "dataset/voc/images/000000000000.jpeg"
-DETECTION_THRESHOLD = 0.8
+DETECTION_THRESHOLD = 0.5
 RUNS_DIR = "runs"
 
-# Create directory
-chdir_to_project_root()
-predict_dir = create_subdirectory(RUNS_DIR, "predict")
+def process_image(interpreter, input_path, output_path):
+    mat = cv2.imread(input_path)
+    output_img = run_odt_and_draw_results(
+        mat,
+        interpreter,
+        threshold = DETECTION_THRESHOLD
+    )
 
-# Resize image
-img = Image.open(INPUT_IMG_PATH)
-img.thumbnail((320, 320), Image.LANCZOS)
-tmp_img_path = os.path.join(predict_dir, "tmp.png")
-img.save(tmp_img_path, "PNG")
+    cv2.imwrite(output_path, output_img)
 
-# Load model
-interpreter = tf.lite.Interpreter(model_path = MODEL_PATH)
-interpreter.allocate_tensors()
+def process_video(interpreter, input_path, output_path):
+    cap = cv2.VideoCapture(input_path)
+    out = cv2.VideoWriter(
+        output_path,
+        cv2.VideoWriter_fourcc(*'mp4v'),
+        cap.get(cv2.CAP_PROP_FPS),
+        (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    )
 
-output_img = run_odt_and_draw_results(
-    tmp_img_path,
-    interpreter,
-    threshold = DETECTION_THRESHOLD
-)
+    while(cap.isOpened()):
+        ret, frame = cap.read()
+        if ret:
+            output_frame = run_odt_and_draw_results(
+                frame,
+                interpreter,
+                threshold = DETECTION_THRESHOLD
+            )
+            out.write(output_frame)
+        else:
+            break
 
-output_img_path = os.path.join(predict_dir, "output.png")
-output_img = cv2.cvtColor(output_img, cv2.COLOR_RGB2BGR)
-cv2.imwrite(output_img_path, output_img)
-os.remove(tmp_img_path)
+    cap.release()
+    out.release()
+
+def main(model_path, input_path, num_threads = 8):
+    # Create directory
+    chdir_to_project_root()
+    predict_dir = create_subdirectory(RUNS_DIR, "predict")
+    output_path = os.path.join(predict_dir, os.path.basename(input_path))
+
+    # Load model
+    interpreter = tf.lite.Interpreter(model_path = model_path, num_threads = num_threads)
+    interpreter.allocate_tensors()
+
+    # Check file extension
+    ext = os.path.splitext(input_path)[1]
+    if ext in [".jpg", ".png", ".jpeg"]:
+        process_image(interpreter, input_path, output_path)
+    elif ext in [".mp4", ".avi"]:
+        process_video(interpreter, input_path, output_path)
+    else:
+        raise Exception(f"Unsupported file type: {ext}")
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv[1], sys.argv[2])

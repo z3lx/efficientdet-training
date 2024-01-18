@@ -21,11 +21,11 @@ def chdir_to_project_root():
     venv_dir = os.environ["VIRTUAL_ENV"]
     os.chdir(os.path.join(venv_dir, ".."))
 
-def preprocess_image(image_path, input_size):
+def preprocess_image(mat, input_size):
     """Preprocess the input image to feed to the TFLite model"""
-    img = tf.io.read_file(image_path)
-    img = tf.io.decode_image(img, channels=3)
-    img = tf.image.convert_image_dtype(img, tf.uint8)
+    mat = cv2.cvtColor(mat, cv2.COLOR_BGR2RGB)
+    img = tf.convert_to_tensor(mat)
+    #img = tf.cast(img, dtype=tf.uint8)
     original_image = img
     resized_img = tf.image.resize(img, input_size)
     resized_img = resized_img[tf.newaxis, :]
@@ -54,23 +54,23 @@ def detect_objects(interpreter, image, threshold):
                 "class_id": classes[i],
                 "score": scores[i]
             }
-        results.append(result)
+            results.append(result)
     return results
 
 def get_color(index):
     """Generate a color for a given object class"""
     hue = (index * 0.618033988749895) % 1.0
-    rgb_color = tuple(int(c * 255) for c in colorsys.hsv_to_rgb(hue, 1, 0.5))
+    rgb_color = tuple(int(c * 255) for c in colorsys.hsv_to_rgb(hue, 1, 1))
     return rgb_color
 
-def run_odt_and_draw_results(image_path, interpreter, threshold=0.5):
+def run_odt_and_draw_results(mat, interpreter, threshold = 0.5):
     """Run object detection on the input image and draw the detection results"""
     # Load the input shape required by the model
     _, input_height, input_width, _ = interpreter.get_input_details()[0]["shape"]
 
     # Load the input image and preprocess it
     preprocessed_image, original_image = preprocess_image(
-        image_path,
+        mat,
         (input_height, input_width)
     )
 
@@ -102,4 +102,5 @@ def run_odt_and_draw_results(image_path, interpreter, threshold=0.5):
 
     # Return the final image
     original_uint8 = original_image_np.astype(np.uint8)
+    original_uint8 = cv2.cvtColor(original_uint8, cv2.COLOR_RGB2BGR)
     return original_uint8
