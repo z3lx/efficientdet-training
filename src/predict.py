@@ -19,7 +19,7 @@ import os
 import cv2
 import tensorflow as tf
 import numpy as np
-from utils import create_subdirectory
+from utils import create_indexed_subdirectory
 from utils import get_project_root
 
 def infer(interpreter: tf.lite.Interpreter, image: np.ndarray, threshold: float) -> list:
@@ -108,7 +108,7 @@ def process_video(interpreter: tf.lite.Interpreter, input_path: str, output_path
 def main(model_path: str, input_path: str, threshold: float, num_threads: int) -> None:
     # Create directory
     runs_dir = get_project_root("runs")
-    predict_dir = create_subdirectory(runs_dir, "predict")
+    predict_dir = create_indexed_subdirectory(runs_dir, "predict")
     output_path = os.path.join(predict_dir, os.path.basename(input_path))
 
     # Load model

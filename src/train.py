@@ -1,10 +1,11 @@
+import os
 import tensorflow as tf
 from tflite_model_maker import model_spec
 from tflite_model_maker import object_detector
 from tflite_model_maker.config import ExportFormat
 #from tflite_model_maker.config import QuantizationConfig
-
-from utils import create_subdirectory, chdir_to_project_root
+from utils import create_indexed_subdirectory
+from utils import get_project_root
 
 tf.get_logger().setLevel("INFO")
 from absl import logging
@@ -14,15 +15,14 @@ logging.set_verbosity(logging.INFO)
 #tf.debugging.set_log_device_placement(True)
 
 # Paths
-runs_dir = "runs"
-exports_dir = "exports"
 dataset_annotation_dir = "dataset/voc/labels"
 dataset_image_dir = "dataset/voc/images"
 
 # Create directories
-chdir_to_project_root()
-run_dir = create_subdirectory(runs_dir, "run")
-export_dir = create_subdirectory(exports_dir, "export")
+runs_dir = get_project_root("runs")
+run_dir = create_indexed_subdirectory(runs_dir, "train")
+export_dir = os.path.join(run_dir, "export")
+os.mkdir(export_dir)
 
 # Set model architecture
 spec = model_spec.get(

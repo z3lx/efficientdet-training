@@ -1,6 +1,6 @@
 import os
 
-def create_subdirectory(base_dir: str, prefix: str) -> str:
+def create_indexed_subdirectory(base_dir: str, prefix: str) -> str:
     """Create a subdirectory with a given prefix in the given base directory"""
     os.makedirs(base_dir, exist_ok=True)
     sub_dir = None
