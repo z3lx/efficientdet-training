@@ -64,7 +64,7 @@ def main(dataset_annotation_dir:str, dataset_image_dir: str, debug: bool = False
         batch_size = 32,
         train_whole_model = True,
         validation_data = train_data,
-        epochs = 1
+        epochs = 50
     )
 
     # Export model
