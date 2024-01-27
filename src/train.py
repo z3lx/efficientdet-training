@@ -85,7 +85,7 @@ def main(dataset_annotation_dir:str, dataset_image_dir: str, debug: bool = False
 if __name__ == "__main__":
     import sys;
     try:
-        main(sys.argv[1], sys.argv[2], bool(sys.argv[3]))
+        main(sys.argv[1], sys.argv[2], sys.argv[3].lower == "true")
     except Exception:
         import traceback
         traceback.print_exc()
